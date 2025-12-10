@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import CreateProductPage from './pages/CreateProductPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,6 +25,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateProductPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
                 </ProtectedRoute>
               }
             />

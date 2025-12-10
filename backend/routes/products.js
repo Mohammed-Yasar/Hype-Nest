@@ -147,5 +147,95 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/products/user/my-products
+// @desc    Get current user's products
+// @access  Private
+router.get('/user/my-products', protect, async (req, res) => {
+  try {
+    const products = await Product.find({ seller: req.user._id })
+      .populate('seller', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json({ products });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @route   PATCH /api/products/:id
+// @desc    Update product (owner only)
+// @access  Private
+router.patch('/:id', protect, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check if user is the seller
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this product' });
+    }
+
+    const { title, description, price, brand, category, images } = req.body;
+
+    if (title) product.title = title;
+    if (description) product.description = description;
+    if (price !== undefined) product.price = Number(price);
+    if (brand) product.brand = brand;
+    if (category) product.category = category;
+    if (images !== undefined) {
+      product.images = Array.isArray(images) ? images : images ? [images] : [];
+    }
+
+    // Reset status to pending if product was edited
+    if (product.status === 'approved') {
+      product.status = 'pending';
+    }
+
+    await product.save();
+
+    const populatedProduct = await Product.findById(product._id).populate(
+      'seller',
+      'name email'
+    );
+
+    res.json(populatedProduct);
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @route   DELETE /api/products/:id
+// @desc    Delete product (owner only)
+// @access  Private
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check if user is the seller
+    if (product.seller.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this product' });
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
+
 export default router;
 
