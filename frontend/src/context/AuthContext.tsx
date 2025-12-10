@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import client from '../api/client';
 import { User } from '../types';
 
 interface AuthContextType {
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const response = await axios.get('/auth/me');
+        const response = await client.get('/auth/me');
         setUser(response.data);
       } catch (error) {
         localStorage.removeItem('token');
@@ -44,14 +44,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const login = async (email: string, password: string) => {
-    const response = await axios.post('/auth/login', { email, password });
+    const response = await client.post('/auth/login', { email, password });
     const { token, ...userData } = response.data;
     localStorage.setItem('token', token);
     setUser(userData);
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const response = await axios.post('/auth/register', {
+    const response = await client.post('/auth/register', {
       name,
       email,
       password,
