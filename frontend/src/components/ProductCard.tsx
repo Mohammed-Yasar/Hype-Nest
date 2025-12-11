@@ -25,7 +25,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-lg mb-1 truncate">{product.title}</h3>
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="font-semibold text-lg truncate flex-1">{product.title}</h3>
+          {product.badges && product.badges.length > 0 && (
+            <div className="flex gap-1 ml-2">
+              {product.badges.slice(0, 2).map((badge) => (
+                <span
+                  key={badge}
+                  className="text-xs bg-red-500 text-white px-2 py-0.5 rounded"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
         <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
         <p className="text-2xl font-bold text-gray-900">${product.price}</p>
       </div>

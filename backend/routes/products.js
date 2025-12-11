@@ -4,6 +4,52 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// @route   GET /api/products/trending
+// @desc    Get trending products (sorted by views)
+// @access  Public
+router.get('/trending', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 8;
+    const products = await Product.find({ status: 'approved' })
+      .populate('seller', 'name email')
+      .sort({ views: -1, createdAt: -1 })
+      .limit(limit);
+
+    res.json({ products });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @route   GET /api/products/new-arrivals
+// @desc    Get new arrivals
+// @access  Public
+router.get('/new-arrivals', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 8;
+    const products = await Product.find({ status: 'approved' })
+      .populate('seller', 'name email')
+      .sort({ createdAt: -1 })
+      .limit(limit);
+
+    res.json({ products });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// @route   GET /api/products/brands
+// @desc    Get unique brands
+// @access  Public
+router.get('/brands', async (req, res) => {
+  try {
+    const brands = await Product.distinct('brand', { status: 'approved' });
+    res.json({ brands: brands.sort() });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @route   GET /api/products
 // @desc    Get products with search, filters, sort, pagination
 // @access  Public

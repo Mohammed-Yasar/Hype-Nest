@@ -15,6 +15,8 @@ export interface Product {
   images: string[];
   seller: User;
   status: 'pending' | 'approved' | 'rejected';
+  views?: number;
+  badges?: string[];
   createdAt: string;
   updatedAt: string;
 }

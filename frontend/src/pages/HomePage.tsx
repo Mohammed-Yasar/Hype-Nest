@@ -3,9 +3,17 @@ import debounce from 'lodash.debounce';
 import client from '../api/client';
 import { Product, ProductsResponse } from '../types';
 import ProductCard from '../components/ProductCard';
+import HeroBanner from '../components/HeroBanner';
+import SectionGrid from '../components/SectionGrid';
+import BrandTiles from '../components/BrandTiles';
+import CategoryCard from '../components/CategoryCard';
 
 const HomePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [trending, setTrending] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [recommended, setRecommended] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -22,6 +30,37 @@ const HomePage = () => {
     sort: 'newest',
     page: 1,
   });
+
+  // Check if we're in browse mode (has filters)
+  const isBrowseMode = filters.search || filters.brand || filters.category || filters.minPrice || filters.maxPrice;
+
+  // Fetch homepage sections
+  useEffect(() => {
+    const fetchHomepageData = async () => {
+      try {
+        const [trendingRes, newArrivalsRes, brandsRes] = await Promise.all([
+          client.get<{ products: Product[] }>('/products/trending?limit=8'),
+          client.get<{ products: Product[] }>('/products/new-arrivals?limit=8'),
+          client.get<{ brands: string[] }>('/products/brands'),
+        ]);
+
+        setTrending(trendingRes.data.products);
+        setNewArrivals(newArrivalsRes.data.products);
+        setBrands(brandsRes.data.brands);
+
+        // Generate recommended (random picks from approved products)
+        const allRes = await client.get<ProductsResponse>('/products?limit=20');
+        const shuffled = [...allRes.data.products].sort(() => 0.5 - Math.random());
+        setRecommended(shuffled.slice(0, 8));
+      } catch (error) {
+        console.error('Error fetching homepage data:', error);
+      }
+    };
+
+    if (!isBrowseMode) {
+      fetchHomepageData();
+    }
+  }, [isBrowseMode]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -54,20 +93,70 @@ const HomePage = () => {
   }, 500);
 
   useEffect(() => {
-    fetchProducts();
+    if (isBrowseMode) {
+      fetchProducts();
+    }
   }, [filters.brand, filters.category, filters.minPrice, filters.maxPrice, filters.sort, filters.page]);
 
   useEffect(() => {
-    debouncedSearch();
-    return () => {
-      debouncedSearch.cancel();
-    };
+    if (isBrowseMode) {
+      debouncedSearch();
+      return () => {
+        debouncedSearch.cancel();
+      };
+    }
   }, [filters.search]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
+  const categories = ['sneakers', 'streetwear', 'collectibles', 'other'];
+
+  // Show homepage sections if not browsing
+  if (!isBrowseMode) {
+    return (
+      <div>
+        <HeroBanner />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Shop by Category */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+              {categories.map((category) => (
+                <CategoryCard key={category} category={category} />
+              ))}
+            </div>
+          </section>
+
+          {/* Trending Now */}
+          <SectionGrid title="Trending Now" products={trending} />
+
+          {/* New Arrivals */}
+          <SectionGrid title="New Arrivals" products={newArrivals} />
+
+          {/* Popular Brands */}
+          <BrandTiles brands={brands} />
+
+          {/* Recommended for You */}
+          <SectionGrid title="Recommended for You" products={recommended} />
+
+          {/* Browse All Button */}
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setFilters({ ...filters, search: '' })}
+              className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+            >
+              Browse All Products
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show browse/filter view
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Discover Products</h1>
@@ -202,4 +291,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
