@@ -41,6 +41,14 @@ const productSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    badges: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
