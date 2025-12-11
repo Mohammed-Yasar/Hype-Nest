@@ -7,6 +7,7 @@ import HeroBanner from '../components/HeroBanner';
 import SectionGrid from '../components/SectionGrid';
 import BrandTiles from '../components/BrandTiles';
 import CategoryCard from '../components/CategoryCard';
+import ActivityFeed from '../components/ActivityFeed';
 
 const HomePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -120,36 +121,43 @@ const HomePage = () => {
         <HeroBanner />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Shop by Category */}
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              {categories.map((category) => (
-                <CategoryCard key={category} category={category} />
-              ))}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3">
+              {/* Shop by Category */}
+              <section className="mb-12">
+                <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                  {categories.map((category) => (
+                    <CategoryCard key={category} category={category} />
+                  ))}
+                </div>
+              </section>
+
+              {/* Trending Now */}
+              <SectionGrid title="Trending Now" products={trending} />
+
+              {/* New Arrivals */}
+              <SectionGrid title="New Arrivals" products={newArrivals} />
+
+              {/* Popular Brands */}
+              <BrandTiles brands={brands} />
+
+              {/* Recommended for You */}
+              <SectionGrid title="Recommended for You" products={recommended} />
+
+              {/* Browse All Button */}
+              <div className="text-center mt-12">
+                <button
+                  onClick={() => setFilters({ ...filters, search: '' })}
+                  className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                >
+                  Browse All Products
+                </button>
+              </div>
             </div>
-          </section>
-
-          {/* Trending Now */}
-          <SectionGrid title="Trending Now" products={trending} />
-
-          {/* New Arrivals */}
-          <SectionGrid title="New Arrivals" products={newArrivals} />
-
-          {/* Popular Brands */}
-          <BrandTiles brands={brands} />
-
-          {/* Recommended for You */}
-          <SectionGrid title="Recommended for You" products={recommended} />
-
-          {/* Browse All Button */}
-          <div className="text-center mt-12">
-            <button
-              onClick={() => setFilters({ ...filters, search: '' })}
-              className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
-            >
-              Browse All Products
-            </button>
+            <div className="lg:col-span-1">
+              <ActivityFeed />
+            </div>
           </div>
         </div>
       </div>

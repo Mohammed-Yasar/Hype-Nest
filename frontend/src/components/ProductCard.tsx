@@ -45,7 +45,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
         <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
-        <p className="text-2xl font-bold text-gray-900">${product.price}</p>
+        <p className="text-2xl font-bold text-gray-900 mb-2">${product.price}</p>
+        {product.seller && (
+          <p className="text-xs text-gray-500">
+            by{' '}
+            <Link
+              to={`/seller/${product.seller._id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-gray-700 underline"
+            >
+              {product.seller.name}
+            </Link>
+          </p>
+        )}
       </div>
     </Link>
   );

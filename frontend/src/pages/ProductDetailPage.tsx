@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import client from '../api/client';
 import { Product } from '../types';
 import RecentlyViewed from '../components/RecentlyViewed';
@@ -114,7 +114,13 @@ const ProductDetailPage = () => {
             </div>
             <div className="border-t pt-4">
               <p className="text-sm text-gray-600">
-                Seller: <span className="font-medium">{product.seller.name}</span>
+                Seller:{' '}
+                <Link
+                  to={`/seller/${product.seller._id}`}
+                  className="font-medium text-gray-900 hover:text-gray-700 underline"
+                >
+                  {product.seller.name}
+                </Link>
               </p>
             </div>
           </div>

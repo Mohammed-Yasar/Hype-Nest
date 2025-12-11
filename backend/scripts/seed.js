@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
+import Activity from '../models/Activity.js';
+import Notification from '../models/Notification.js';
 
 dotenv.config();
 
@@ -146,6 +148,14 @@ const generateProducts = (sellerIds) => {
     // 90% approved, 10% pending
     const status = Math.random() > 0.1 ? 'approved' : 'pending';
     
+    // Generate badges (30% chance for "hot", 20% for "new", 15% for "limited")
+    const badges = [];
+    if (Math.random() < 0.3) badges.push('hot');
+    if (Math.random() < 0.2) badges.push('new');
+    if (Math.random() < 0.15) badges.push('limited');
+    // High price items get "premium" badge
+    if (template.price > 1000) badges.push('premium');
+    
     // Generate image URL using picsum or placeholder
     const imgSeed = template.imgSeed || `product${productIndex}`;
     const imageUrl = `https://picsum.photos/seed/${imgSeed}/800/600`;
@@ -159,6 +169,7 @@ const generateProducts = (sellerIds) => {
       images: [imageUrl],
       seller: sellerId,
       status: status,
+      badges: badges,
       createdAt: createdAt,
       updatedAt: createdAt,
     });
@@ -220,9 +231,58 @@ const seed = async () => {
     const approvedCount = inserted.filter(p => p.status === 'approved').length;
     const pendingCount = inserted.filter(p => p.status === 'pending').length;
 
+    // Create sample activities
+    console.log('\nCreating sample activities...');
+    const activities = [];
+    for (let i = 0; i < Math.min(20, inserted.length); i++) {
+      const product = inserted[i];
+      const seller = sellers.find(s => s._id.toString() === product.seller.toString());
+      if (seller) {
+        activities.push({
+          type: product.status === 'approved' ? 'product_approved' : 'product_created',
+          user: seller._id,
+          product: product._id,
+          message: `${seller.name}'s product "${product.title}" was ${product.status === 'approved' ? 'approved' : 'created'}`,
+          createdAt: product.createdAt,
+        });
+      }
+    }
+    // Add some user registration activities
+    createdUsers.slice(0, 5).forEach(user => {
+      activities.push({
+        type: 'user_registered',
+        user: user._id,
+        message: `${user.name} joined HypeNest`,
+        createdAt: user.createdAt,
+      });
+    });
+    await Activity.insertMany(activities);
+    console.log(`  ✓ Created ${activities.length} activities`);
+
+    // Create sample notifications for sellers
+    console.log('\nCreating sample notifications...');
+    const notifications = [];
+    inserted.filter(p => p.status === 'approved').slice(0, 10).forEach(product => {
+      notifications.push({
+        user: product.seller,
+        type: 'product_approved',
+        title: 'Product Approved',
+        message: `Your product "${product.title}" has been approved and is now live!`,
+        link: `/products/${product._id}`,
+        read: false,
+        createdAt: product.createdAt,
+      });
+    });
+    if (notifications.length > 0) {
+      await Notification.insertMany(notifications);
+      console.log(`  ✓ Created ${notifications.length} notifications`);
+    }
+
     console.log(`\n✓ Seed complete!`);
     console.log(`  → Users: ${createdUsers.length}`);
     console.log(`  → Products: ${inserted.length} (${approvedCount} approved, ${pendingCount} pending)`);
+    console.log(`  → Activities: ${activities.length}`);
+    console.log(`  → Notifications: ${notifications.length}`);
     console.log(`  → Example Product IDs: ${inserted.slice(0, 3).map(p => p._id).join(', ')}`);
     console.log('\n📝 Login credentials:');
     console.log(`  Sellers: ${sellers[0].email} / password123`);

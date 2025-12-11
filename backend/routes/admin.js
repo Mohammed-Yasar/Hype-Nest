@@ -1,5 +1,7 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Notification from '../models/Notification.js';
+import Activity from '../models/Activity.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -38,6 +40,31 @@ router.patch('/products/:id/approve', protect, admin, async (req, res) => {
       'name email'
     );
 
+    // Create notification for seller
+    try {
+      await Notification.create({
+        user: product.seller,
+        type: 'product_approved',
+        title: 'Product Approved',
+        message: `Your product "${product.title}" has been approved and is now live!`,
+        link: `/products/${product._id}`,
+      });
+    } catch (notifErr) {
+      console.error('Failed to create notification:', notifErr);
+    }
+
+    // Create activity
+    try {
+      await Activity.create({
+        type: 'product_approved',
+        user: product.seller,
+        product: product._id,
+        message: `${populatedProduct.seller.name}'s product "${product.title}" was approved`,
+      });
+    } catch (activityErr) {
+      console.error('Failed to create activity:', activityErr);
+    }
+
     res.json(populatedProduct);
   } catch (error) {
     if (error.name === 'CastError') {
@@ -65,6 +92,19 @@ router.patch('/products/:id/reject', protect, admin, async (req, res) => {
       'seller',
       'name email'
     );
+
+    // Create notification for seller
+    try {
+      await Notification.create({
+        user: product.seller,
+        type: 'product_rejected',
+        title: 'Product Rejected',
+        message: `Your product "${product.title}" has been rejected. Please review and resubmit.`,
+        link: `/dashboard`,
+      });
+    } catch (notifErr) {
+      console.error('Failed to create notification:', notifErr);
+    }
 
     res.json(populatedProduct);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Notifications from './Notifications';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -36,6 +37,7 @@ const Navbar = () => {
                     Admin
                   </Link>
                 )}
+                <Notifications />
                 <span className="text-gray-700">{user.name}</span>
                 <button
                   onClick={logout}
