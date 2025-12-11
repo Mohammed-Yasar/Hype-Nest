@@ -2,14 +2,21 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import client from '../api/client';
 import { Product } from '../types';
+import { useAuth } from '../context/AuthContext';
 import RecentlyViewed from '../components/RecentlyViewed';
 import FavoriteButton from '../components/FavoriteButton';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showOfferForm, setShowOfferForm] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [offerMessage, setOfferMessage] = useState('');
+  const [offerLoading, setOfferLoading] = useState(false);
+  const [offerError, setOfferError] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -112,8 +119,8 @@ const ProductDetailPage = () => {
                 </div>
               )}
             </div>
-            <div className="border-t pt-4">
-              <p className="text-sm text-gray-600">
+            <div className="border-t pt-4 mb-6">
+              <p className="text-sm text-gray-600 mb-4">
                 Seller:{' '}
                 <Link
                   to={`/seller/${product.seller._id}`}
@@ -122,6 +129,103 @@ const ProductDetailPage = () => {
                   {product.seller.name}
                 </Link>
               </p>
+              
+              {user && user._id !== product.seller._id && product.status === 'approved' && (
+                <div>
+                  {!showOfferForm ? (
+                    <button
+                      onClick={() => setShowOfferForm(true)}
+                      className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      Make Offer
+                    </button>
+                  ) : (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-semibold mb-3">Make an Offer</h3>
+                      {offerError && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3 text-sm">
+                          {offerError}
+                        </div>
+                      )}
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Offer Amount ($)
+                        </label>
+                        <input
+                          type="number"
+                          value={offerAmount}
+                          onChange={(e) => setOfferAmount(e.target.value)}
+                          placeholder={`Max: $${product.price}`}
+                          min="0"
+                          max={product.price}
+                          step="0.01"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Message (optional)
+                        </label>
+                        <textarea
+                          value={offerMessage}
+                          onChange={(e) => setOfferMessage(e.target.value)}
+                          placeholder="Add a message to your offer..."
+                          rows={3}
+                          maxLength={500}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            setOfferError('');
+                            if (!offerAmount || parseFloat(offerAmount) <= 0) {
+                              setOfferError('Please enter a valid offer amount');
+                              return;
+                            }
+                            if (parseFloat(offerAmount) > product.price) {
+                              setOfferError(`Offer cannot exceed $${product.price}`);
+                              return;
+                            }
+                            
+                            setOfferLoading(true);
+                            try {
+                              await client.post('/offers', {
+                                productId: product._id,
+                                amount: offerAmount,
+                                message: offerMessage,
+                              });
+                              setShowOfferForm(false);
+                              setOfferAmount('');
+                              setOfferMessage('');
+                              alert('Offer submitted successfully!');
+                            } catch (err: any) {
+                              setOfferError(err.response?.data?.message || 'Failed to submit offer');
+                            } finally {
+                              setOfferLoading(false);
+                            }
+                          }}
+                          disabled={offerLoading}
+                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {offerLoading ? 'Submitting...' : 'Submit Offer'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowOfferForm(false);
+                            setOfferAmount('');
+                            setOfferMessage('');
+                            setOfferError('');
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

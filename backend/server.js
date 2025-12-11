@@ -9,6 +9,7 @@ import adminRoutes from './routes/admin.js';
 import userRoutes from './routes/users.js';
 import activityRoutes from './routes/activity.js';
 import notificationRoutes from './routes/notifications.js';
+import offerRoutes from './routes/offers.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/offers', offerRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
