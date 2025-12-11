@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import client from '../api/client';
 import { Product } from '../types';
 import RecentlyViewed from '../components/RecentlyViewed';
+import FavoriteButton from '../components/FavoriteButton';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +80,10 @@ const ProductDetailPage = () => {
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
+            <div className="flex items-start justify-between mb-2">
+              <h1 className="text-3xl font-bold">{product.title}</h1>
+              <FavoriteButton productId={product._id} size="lg" />
+            </div>
             <p className="text-xl text-gray-600 mb-4">{product.brand}</p>
             <p className="text-4xl font-bold mb-6">${product.price}</p>
             <div className="mb-6">

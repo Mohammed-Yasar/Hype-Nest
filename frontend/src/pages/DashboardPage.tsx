@@ -6,7 +6,14 @@ import ProductCard from '../components/ProductCard';
 
 const DashboardPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [favorites, setFavorites] = useState<Product[]>([]);
+  const [activeTab, setActiveTab] = useState<'listings' | 'favorites'>('listings');
   const [loading, setLoading] = useState(true);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [stats, setStats] = useState({
+    listingsCount: 0,
+    totalViews: 0,
+  });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,13 +32,42 @@ const DashboardPage = () => {
 
   useEffect(() => {
     fetchMyProducts();
+    fetchFavorites();
+    fetchStats();
   }, []);
+
+  const fetchFavorites = async () => {
+    setFavoritesLoading(true);
+    try {
+      const response = await client.get<{ favorites: Product[] }>('/users/me/favorites');
+      setFavorites(response.data.favorites);
+    } catch (err: any) {
+      console.error('Error fetching favorites:', err);
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await client.get<{ products: Product[] }>('/products/user/my-products');
+      const myProducts = response.data.products;
+      const totalViews = myProducts.reduce((sum, p) => sum + (p.views || 0), 0);
+      setStats({
+        listingsCount: myProducts.length,
+        totalViews,
+      });
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  };
 
   const fetchMyProducts = async () => {
     setLoading(true);
     try {
       const response = await client.get<{ products: Product[] }>('/products/user/my-products');
       setProducts(response.data.products);
+      fetchStats(); // Update stats
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch products');
     } finally {
@@ -128,6 +164,7 @@ const DashboardPage = () => {
       setShowEditForm(false);
       setEditingProduct(null);
       fetchMyProducts();
+      fetchFavorites(); // Refresh favorites in case it was removed
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update product');
     }
@@ -297,7 +334,7 @@ const DashboardPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Products</h1>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
         <button
           onClick={() => navigate('/create-product')}
           className="bg-gray-900 text-white px-4 py-2 rounded-md hover:bg-gray-800"
@@ -306,29 +343,69 @@ const DashboardPage = () => {
         </button>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-2">My Listings</h3>
+          <p className="text-3xl font-bold text-gray-900">{stats.listingsCount}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-2">Total Views</h3>
+          <p className="text-3xl font-bold text-gray-900">{stats.totalViews}</p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('listings')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'listings'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            My Listings ({products.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('favorites')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'favorites'
+                ? 'border-gray-900 text-gray-900'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            My Favorites ({favorites.length})
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="text-lg">Loading your products...</div>
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-lg text-gray-600 mb-4">You haven't created any products yet.</div>
-          <button
-            onClick={() => navigate('/create-product')}
-            className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800"
-          >
-            Create Your First Product
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
+      {activeTab === 'listings' ? (
+        <>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="text-lg">Loading your products...</div>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-lg text-gray-600 mb-4">You haven't created any products yet.</div>
+              <button
+                onClick={() => navigate('/create-product')}
+                className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800"
+              >
+                Create Your First Product
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
             <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="aspect-square bg-gray-200">
                 {product.images && product.images.length > 0 ? (
@@ -366,8 +443,28 @@ const DashboardPage = () => {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {favoritesLoading ? (
+            <div className="text-center py-12">
+              <div className="text-lg">Loading favorites...</div>
+            </div>
+          ) : favorites.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-lg text-gray-600 mb-4">You haven't favorited any products yet.</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {favorites.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

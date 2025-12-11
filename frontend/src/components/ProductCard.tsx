@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
+import FavoriteButton from './FavoriteButton';
 
 interface ProductCardProps {
   product: Product;
@@ -9,9 +10,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Link
       to={`/products/${product._id}`}
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative"
     >
-      <div className="aspect-square bg-gray-200">
+      <div className="aspect-square bg-gray-200 relative">
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[0]}
@@ -23,6 +24,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             No Image
           </div>
         )}
+        <div className="absolute top-2 right-2">
+          <FavoriteButton productId={product._id} size="sm" />
+        </div>
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between mb-1">
