@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import client from '../api/client';
 import { Product } from '../types';
+import RecentlyViewed from '../components/RecentlyViewed';
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,22 @@ const ProductDetailPage = () => {
       try {
         const response = await client.get<Product>(`/products/${id}`);
         setProduct(response.data);
+
+        // Increment view count
+        try {
+          await client.post(`/products/${id}/view`);
+        } catch (viewErr) {
+          console.error('Failed to increment view count:', viewErr);
+        }
+
+        // Add to recently viewed in localStorage
+        if (id) {
+          const recentlyViewed = JSON.parse(
+            localStorage.getItem('recentlyViewed') || '[]'
+          ) as string[];
+          const updated = [id, ...recentlyViewed.filter((itemId) => itemId !== id)].slice(0, 10);
+          localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+        }
       } catch (err: any) {
         setError(err.response?.data?.message || 'Product not found');
       } finally {
@@ -69,10 +86,27 @@ const ProductDetailPage = () => {
               <h2 className="text-lg font-semibold mb-2">Description</h2>
               <p className="text-gray-700">{product.description}</p>
             </div>
-            <div className="mb-6">
+            <div className="mb-6 flex items-center gap-4">
               <span className="inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
                 {product.category}
               </span>
+              {product.views !== undefined && (
+                <span className="text-sm text-gray-600">
+                  👁️ {product.views} views
+                </span>
+              )}
+              {product.badges && product.badges.length > 0 && (
+                <div className="flex gap-2">
+                  {product.badges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="text-xs bg-red-500 text-white px-2 py-1 rounded"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="border-t pt-4">
               <p className="text-sm text-gray-600">
@@ -82,6 +116,8 @@ const ProductDetailPage = () => {
           </div>
         </div>
       </div>
+
+      <RecentlyViewed />
     </div>
   );
 };

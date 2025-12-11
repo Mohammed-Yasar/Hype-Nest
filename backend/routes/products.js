@@ -135,6 +135,30 @@ router.get('/', async (req, res) => {
   }
 });
 
+// @route   POST /api/products/:id/view
+// @desc    Increment product view count
+// @access  Public
+router.post('/:id/view', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json({ views: product.views });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // @route   GET /api/products/:id
 // @desc    Get product by ID
 // @access  Public
