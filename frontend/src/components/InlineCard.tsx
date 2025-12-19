@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Product } from '../types';
 import client from '../api/client';
 
-const InlineCard: React.FC<{ product: Product; onEdit: (p: Product) => void; onDelete: (id: string) => void }> = ({ product, onEdit, onDelete }) => {
+const InlineCard: React.FC<{ product: Product; onEdit: (p: Product) => void; onDelete: (id: string) => void }> = ({ product, onDelete }) => {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(product.title);
   const [price, setPrice] = useState(product.price.toString());

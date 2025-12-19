@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import debounce from 'lodash.debounce';
 import client from '../api/client';
 import { Product, ProductsResponse } from '../types';
 import ProductCard from '../components/ProductCard';
