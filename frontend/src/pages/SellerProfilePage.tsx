@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import client from '../api/client';
 import { Product, ProductsResponse } from '../types';
 import ProductCard from '../components/ProductCard';
+import Breadcrumbs from '../components/Breadcrumbs';
+import EmptyState from '../components/EmptyState';
 
 interface SellerProfile {
   _id: string;
@@ -82,26 +84,69 @@ const SellerProfilePage = () => {
     month: 'long',
   });
 
+  // Calculate seller trust score based on joined date and product count
+  const daysSinceJoined = Math.floor((Date.now() - new Date(seller.joinedAt).getTime()) / (1000 * 60 * 60 * 24));
+  const isTrustedSeller = seller.productCount >= 3 && seller.rating >= 4;
+  const isVerifiedSeller = daysSinceJoined >= 30;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Sellers' }, { label: seller.name }]} />
       {/* Seller Profile Header */}
       <div className="bg-white rounded-lg shadow-md p-8 mb-8">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{seller.name}</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold">{seller.name}</h1>
+              {isVerifiedSeller && (
+                <span title="Verified Seller" className="text-blue-500 text-2xl">
+                  ✓
+                </span>
+              )}
+              {isTrustedSeller && (
+                <span title="Trusted Seller" className="text-yellow-500 text-2xl">
+                  ⭐
+                </span>
+              )}
+            </div>
             {seller.bio && (
               <p className="text-gray-700 mb-4 max-w-2xl">{seller.bio}</p>
             )}
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <div>
-                <span className="font-semibold">{seller.productCount}</span> Products
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 text-sm text-gray-600">
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg">{seller.productCount}</span>
+                <span>Products Listed</span>
               </div>
-              <div>
-                <span className="font-semibold">⭐ {seller.rating.toFixed(1)}</span> Rating
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg">⭐ {seller.rating.toFixed(1)}</span>
+                <span>Rating</span>
               </div>
-              <div>
-                Joined {joinDate}
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg">{daysSinceJoined}</span>
+                <span>Days Active</span>
               </div>
+              <div className="flex flex-col">
+                <span className="font-semibold text-lg">Joined</span>
+                <span>{joinDate}</span>
+              </div>
+            </div>
+            {/* Trust Badges */}
+            <div className="flex gap-2 flex-wrap mt-4">
+              {isVerifiedSeller && (
+                <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full font-semibold">
+                  ✓ Verified Seller
+                </span>
+              )}
+              {isTrustedSeller && (
+                <span className="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full font-semibold">
+                  ⭐ Trusted Seller
+                </span>
+              )}
+              {seller.productCount >= 1 && (
+                <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-semibold">
+                  ✓ Active Seller
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -115,9 +160,12 @@ const SellerProfilePage = () => {
             <div className="text-lg">Loading products...</div>
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-lg text-gray-600">This seller hasn't listed any products yet.</div>
-          </div>
+          <EmptyState
+            title="No products from this seller"
+            description="This seller hasn't listed any products yet. Check back later or browse trending items."
+            icon="🧾"
+            action={{ label: 'Browse Trending', path: '/' }}
+          />
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">

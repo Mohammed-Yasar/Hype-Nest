@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import Breadcrumbs from '../components/Breadcrumbs';
 import client from '../api/client';
 import { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
   const [showOfferForm, setShowOfferForm] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [offerMessage, setOfferMessage] = useState('');
@@ -69,169 +71,141 @@ const ProductDetailPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: product.category, to: `/?category=${product.category}` }, { label: product.brand, to: `/?brand=${product.brand}` }, { label: product.title }]} />
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-          <div>
-            {product.images && product.images.length > 0 ? (
-              <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                <img
-                  src={product.images[0]}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-                No Image
-              </div>
-            )}
-          </div>
-          <div>
-            <div className="flex items-start justify-between mb-2">
-              <h1 className="text-3xl font-bold">{product.title}</h1>
-              <FavoriteButton productId={product._id} size="lg" />
-            </div>
-            <p className="text-xl text-gray-600 mb-4">{product.brand}</p>
-            <p className="text-4xl font-bold mb-6">${product.price}</p>
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-gray-700">{product.description}</p>
-            </div>
-            <div className="mb-6 flex items-center gap-4">
-              <span className="inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                {product.category}
-              </span>
-              {product.views !== undefined && (
-                <span className="text-sm text-gray-600">
-                  👁️ {product.views} views
-                </span>
-              )}
-              {product.badges && product.badges.length > 0 && (
-                <div className="flex gap-2">
-                  {product.badges.map((badge) => (
-                    <span
-                      key={badge}
-                      className="text-xs bg-red-500 text-white px-2 py-1 rounded"
-                    >
-                      {badge}
-                    </span>
-                  ))}
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              {product.images && product.images.length > 0 ? (
+                <div className="w-full bg-gray-100 rounded overflow-hidden">
+                  <img src={product.images[0]} alt={product.title} className="w-full object-contain" />
                 </div>
+              ) : (
+                <div className="w-full h-64 bg-gray-200 rounded flex items-center justify-center text-gray-400">No Image</div>
               )}
             </div>
-            <div className="border-t pt-4 mb-6">
-              <p className="text-sm text-gray-600 mb-4">
-                Seller:{' '}
-                <Link
-                  to={`/seller/${product.seller._id}`}
-                  className="font-medium text-gray-900 hover:text-gray-700 underline"
-                >
-                  {product.seller.name}
-                </Link>
-              </p>
-              
-              {user && user._id !== product.seller._id && product.status === 'approved' && (
+
+            <div className="lg:col-span-2">
+              <div className="flex items-start justify-between mb-2">
                 <div>
-                  {!showOfferForm ? (
-                    <button
-                      onClick={() => setShowOfferForm(true)}
-                      className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                    >
-                      Make Offer
-                    </button>
-                  ) : (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-semibold mb-3">Make an Offer</h3>
-                      {offerError && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3 text-sm">
-                          {offerError}
-                        </div>
-                      )}
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Offer Amount ($)
-                        </label>
-                        <input
-                          type="number"
-                          value={offerAmount}
-                          onChange={(e) => setOfferAmount(e.target.value)}
-                          placeholder={`Max: $${product.price}`}
-                          min="0"
-                          max={product.price}
-                          step="0.01"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Message (optional)
-                        </label>
-                        <textarea
-                          value={offerMessage}
-                          onChange={(e) => setOfferMessage(e.target.value)}
-                          placeholder="Add a message to your offer..."
-                          rows={3}
-                          maxLength={500}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={async () => {
-                            setOfferError('');
-                            if (!offerAmount || parseFloat(offerAmount) <= 0) {
-                              setOfferError('Please enter a valid offer amount');
-                              return;
-                            }
-                            if (parseFloat(offerAmount) > product.price) {
-                              setOfferError(`Offer cannot exceed $${product.price}`);
-                              return;
-                            }
-                            
-                            setOfferLoading(true);
-                            try {
-                              await client.post('/offers', {
-                                productId: product._id,
-                                amount: offerAmount,
-                                message: offerMessage,
-                              });
-                              setShowOfferForm(false);
-                              setOfferAmount('');
-                              setOfferMessage('');
-                              alert('Offer submitted successfully!');
-                            } catch (err: any) {
-                              setOfferError(err.response?.data?.message || 'Failed to submit offer');
-                            } finally {
-                              setOfferLoading(false);
-                            }
-                          }}
-                          disabled={offerLoading}
-                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {offerLoading ? 'Submitting...' : 'Submit Offer'}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowOfferForm(false);
-                            setOfferAmount('');
-                            setOfferMessage('');
-                            setOfferError('');
-                          }}
-                          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  <h1 className="text-2xl font-bold">{product.title}</h1>
+                  <p className="text-sm text-gray-600">{product.brand}</p>
                 </div>
-              )}
+                <FavoriteButton productId={product._id} size="lg" />
+              </div>
+
+              <p className="text-3xl font-bold mb-4">${product.price}</p>
+
+              <ProductTabs product={product} user={user} onOffer={{ show: showOfferForm, setShow: setShowOfferForm, amount: offerAmount, setAmount: setOfferAmount, message: offerMessage, setMessage: setOfferMessage, loading: offerLoading, setLoading: setOfferLoading, error: offerError, setError: setOfferError }} />
             </div>
           </div>
         </div>
       </div>
 
       <RecentlyViewed />
+    </div>
+  );
+};
+
+const ProductTabs: React.FC<{ product: any; user: any; onOffer: any }> = ({ product, user, onOffer }) => {
+  const [tab, setTab] = useState<'overview' | 'details' | 'seller' | 'activity'>('overview');
+
+  const { show, setShow, amount, setAmount, message, setMessage, loading, setLoading, error, setError } = onOffer;
+
+  const handleSubmitOffer = async () => {
+    setError('');
+    if (!amount || parseFloat(amount) <= 0) {
+      setError('Please enter a valid offer amount');
+      return;
+    }
+    if (parseFloat(amount) > product.price) {
+      setError(`Offer cannot exceed $${product.price}`);
+      return;
+    }
+    setLoading(true);
+    try {
+      await client.post('/offers', {
+        productId: product._id,
+        amount,
+        message,
+      });
+      setShow(false);
+      setAmount('');
+      setMessage('');
+      alert('Offer submitted successfully!');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to submit offer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-4 border-b border-gray-200">
+        <nav className="flex space-x-6">
+          <button onClick={() => setTab('overview')} className={`py-2 ${tab === 'overview' ? 'border-b-2 border-black font-semibold' : 'text-gray-600'}`}>Overview</button>
+          <button onClick={() => setTab('details')} className={`py-2 ${tab === 'details' ? 'border-b-2 border-black font-semibold' : 'text-gray-600'}`}>Details</button>
+          <button onClick={() => setTab('seller')} className={`py-2 ${tab === 'seller' ? 'border-b-2 border-black font-semibold' : 'text-gray-600'}`}>Seller</button>
+          <button onClick={() => setTab('activity')} className={`py-2 ${tab === 'activity' ? 'border-b-2 border-black font-semibold' : 'text-gray-600'}`}>Activity</button>
+        </nav>
+      </div>
+
+      <div>
+        {tab === 'overview' && (
+          <div className="text-sm text-gray-700">
+            <p className="mb-3">{product.description}</p>
+          </div>
+        )}
+
+        {tab === 'details' && (
+          <div className="text-sm text-gray-700">
+            <p><strong>Brand:</strong> {product.brand}</p>
+            <p><strong>Category:</strong> {product.category}</p>
+            <p><strong>Created:</strong> {new Date(product.createdAt).toLocaleDateString()}</p>
+          </div>
+        )}
+
+        {tab === 'seller' && (
+          <div className="text-sm text-gray-700">
+            <p>Seller: <Link to={`/seller/${product.seller._id}`} className="underline">{product.seller.name}</Link></p>
+          </div>
+        )}
+
+        {tab === 'activity' && (
+          <div className="text-sm text-gray-700">
+            <p>👁️ Views: {product.views || 0}</p>
+            <p>❤️ Favorites: {(product as any).favoritesCount || 0}</p>
+          </div>
+        )}
+
+        <div className="mt-6">
+          {user && user._id !== product.seller._id && product.status === 'approved' && (
+            <div>
+              {!show ? (
+                <button onClick={() => setShow(true)} className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">Make Offer</button>
+              ) : (
+                <div className="border border-gray-200 rounded-lg p-4">
+                  {error && <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded mb-3 text-sm">{error}</div>}
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Offer Amount ($)</label>
+                    <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`Max: $${product.price}`} min="0" max={product.price} step="0.01" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" />
+                  </div>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
+                    <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add a message to your offer..." rows={3} maxLength={500} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleSubmitOffer} disabled={loading} className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">{loading ? 'Submitting...' : 'Submit Offer'}</button>
+                    <button onClick={() => { setShow(false); setAmount(''); setMessage(''); setError(''); }} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

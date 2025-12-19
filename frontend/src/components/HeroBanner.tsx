@@ -8,8 +8,11 @@ const HeroBanner = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Discover Hype. Buy Authentic.
           </h1>
-          <p className="text-xl mb-8 text-gray-300">
+          <p className="text-xl mb-2 text-gray-300">
             Your marketplace for sneakers, streetwear, and collectibles
+          </p>
+          <p className="text-lg mb-8 text-gray-400">
+            Curated by sneakerheads, built for collectors. Buy, sell, and trade authentic items.
           </p>
           <div className="space-x-4">
             <Link

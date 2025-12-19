@@ -6,18 +6,12 @@ import { Readable } from 'stream';
 
 const router = express.Router();
 
-// Configure Cloudinary
-if (
-  process.env.CLOUDINARY_CLOUD_NAME &&
-  process.env.CLOUDINARY_API_KEY &&
-  process.env.CLOUDINARY_API_SECRET
-) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
-}
+// Configure Cloudinary with env variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Configure multer for memory storage
 const upload = multer({
@@ -49,8 +43,13 @@ const uploadToCloudinary = (buffer) => {
         resource_type: 'image',
       },
       (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
+        if (error) {
+          reject(error);
+        } else if (result && result.secure_url) {
+          resolve(result);
+        } else {
+          reject(new Error('No URL returned from Cloudinary'));
+        }
       }
     );
 
@@ -70,32 +69,21 @@ router.post('/image', protect, upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // If Cloudinary is configured, use it
-    if (
-      process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-    ) {
-      try {
-        const result = await uploadToCloudinary(req.file.buffer);
-        res.json({
-          url: result.secure_url,
-        });
-      } catch (error) {
-        res.status(500).json({ message: 'Cloudinary upload failed: ' + error.message });
-      }
-    } else {
-      // Fallback: return simulated URL
-      const simulatedUrl = `https://via.placeholder.com/800x600?text=Image+${Date.now()}`;
+    try {
+      const result = await uploadToCloudinary(req.file.buffer);
       res.json({
-        url: simulatedUrl,
-        message: 'Cloudinary not configured - using placeholder URL',
+        url: result.secure_url,
+      });
+    } catch (error) {
+      console.error('Cloudinary error:', error);
+      res.status(500).json({
+        message: `Cloudinary upload failed: ${error.message}`,
       });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Upload endpoint error:', error);
+    res.status(500).json({ message: error.message || 'Upload failed' });
   }
 });
 
 export default router;
-

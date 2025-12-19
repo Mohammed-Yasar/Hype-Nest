@@ -195,7 +195,7 @@ router.post('/', protect, async (req, res) => {
       });
     }
 
-    const product = await Product.create({
+    const product = new Product({
       title,
       description,
       price: Number(price),
@@ -203,8 +203,12 @@ router.post('/', protect, async (req, res) => {
       category,
       images: Array.isArray(images) ? images : images ? [images] : [],
       seller: req.user._id,
-      status: 'pending',
+      status: 'approved',
+      approvedAt: new Date(),
+      approvedBy: req.user._id,
     });
+
+    await product.save();
 
     const populatedProduct = await Product.findById(product._id).populate(
       'seller',

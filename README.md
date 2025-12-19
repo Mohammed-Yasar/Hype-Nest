@@ -2,6 +2,23 @@
 
 A production-ready full-stack marketplace for sneakers, streetwear, and collectibles.
 
+> **For Architecture & Design Decisions**: See [ARCHITECTURE.md](./ARCHITECTURE.md)
+
+## 🎯 What is HypeNest?
+
+**The Problem**: Sneaker and streetwear enthusiasts need a curated marketplace with community trust signals.
+
+**Our Solution**: 
+- 🛍️ Marketplace for authentic sneakers, streetwear, and collectibles
+- ✓ Admin-curated (quality > quantity)
+- 🤝 Community trust signals (seller badges, view counts, join dates)
+- 🔍 Smart discovery (categories, brands, trending)
+
+**Who's It For**:
+- Sneaker collectors & streetwear enthusiasts (primary)
+- Casual buyers seeking authenticated items (secondary)
+- Sellers wanting a niche marketplace (tertiary)
+
 ## Project Overview
 
 HypeNest is a modern marketplace platform that allows users to buy and sell sneakers, streetwear, and collectibles. The platform features user authentication, product management, search and filtering, admin approval workflow, and a clean, responsive UI.

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { Product } from '../types';
 import ProductCard from '../components/ProductCard';
+import EmptyState from '../components/EmptyState';
+import InlineCard from '../components/InlineCard';
 
 const DashboardPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -394,55 +396,20 @@ const DashboardPage = () => {
               <div className="text-lg">Loading your products...</div>
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-lg text-gray-600 mb-4">You haven't created any products yet.</div>
-              <button
-                onClick={() => navigate('/create-product')}
-                className="bg-gray-900 text-white px-6 py-2 rounded-md hover:bg-gray-800"
-              >
-                Create Your First Product
-              </button>
+            <div className="py-12">
+              <div className="max-w-md mx-auto">
+                <EmptyState
+                  title="No listings yet"
+                  description="You haven't created any products. Start by listing your first item to attract buyers."
+                  icon="📦"
+                  action={{ label: 'Create Your First Product', path: '/create-product' }}
+                />
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => (
-            <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="aspect-square bg-gray-200">
-                {product.images && product.images.length > 0 ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
-                  </div>
-                )}
-              </div>
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg truncate flex-1">{product.title}</h3>
-                  {getStatusBadge(product.status)}
-                </div>
-                <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
-                <p className="text-2xl font-bold text-gray-900 mb-4">${product.price}</p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    className="flex-1 bg-red-600 text-white px-3 py-2 rounded-md text-sm hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
+                <InlineCard key={product._id} product={product} onEdit={handleEdit} onDelete={handleDelete} />
               ))}
             </div>
           )}

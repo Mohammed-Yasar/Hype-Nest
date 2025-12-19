@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { useToast } from './hooks/useToast';
 import Navbar from './components/Navbar';
+import ToastContainer from './components/ToastContainer';
+import SearchOverlay from './components/SearchOverlay';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -12,11 +15,15 @@ import SellerProfilePage from './pages/SellerProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  const { toasts, removeToast } = useToast();
+
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Navbar />
+          <SearchOverlay />
+          <ToastContainer toasts={toasts} onRemove={removeToast} />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />

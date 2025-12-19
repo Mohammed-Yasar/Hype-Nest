@@ -1,6 +1,7 @@
+import './config/env.js'; // Load env variables FIRST
+
 import express from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
@@ -10,8 +11,6 @@ import userRoutes from './routes/users.js';
 import activityRoutes from './routes/activity.js';
 import notificationRoutes from './routes/notifications.js';
 import offerRoutes from './routes/offers.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,4 +50,3 @@ mongoose
   });
 
 export default app;
-

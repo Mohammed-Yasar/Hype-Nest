@@ -15,6 +15,12 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => window.dispatchEvent(new Event('openSearch'))}
+              className="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100"
+            >
+              🔎
+            </button>
             {user ? (
               <>
                 <Link
