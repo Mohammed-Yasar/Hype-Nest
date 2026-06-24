@@ -4,8 +4,11 @@
 [![React](https://img.shields.io/badge/React-18.2-blue?logo=react)](https://react.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Database-green?logo=mongodb)](https://www.mongodb.com/)
 [![License](https://img.shields.io/badge/License-ISC-blue)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-brightgreen)](https://hype-nest.vercel.app/)
 
 A modern, full-stack marketplace platform for sneakers, streetwear, and collectibles. Built with cutting-edge technologies to deliver a seamless user experience for both buyers and sellers.
+
+**🌐 Live App**: [https://hype-nest.vercel.app/](https://hype-nest.vercel.app/)
 
 ---
 
@@ -81,7 +84,13 @@ A modern, full-stack marketplace platform for sneakers, streetwear, and collecti
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Try It Now
+
+👉 **[Visit the Live App](https://hype-nest.vercel.app/)** - No installation required!
+
+---
+
+## 💻 Local Development Setup
 
 ### Prerequisites
 - Node.js **v18 or higher**
@@ -105,13 +114,10 @@ cp .env.example .env
 # - MongoDB URI (MONGO_URI)
 # - JWT Secret (JWT_SECRET)
 # - Cloudinary credentials (if using image uploads)
-# - Port (default: 5000)
 
 # Start development server
 npm run dev
 ```
-
-**Backend Server**: http://localhost:5000
 
 ### Frontend Installation
 
@@ -126,13 +132,11 @@ npm install
 cp .env.example .env
 
 # Configure your .env file with:
-# - API endpoint (VITE_API_URL=http://localhost:5000)
+# - API endpoint (VITE_API_URL=<your-backend-url>)
 
 # Start development server
 npm run dev
 ```
-
-**Frontend App**: http://localhost:5173
 
 ### Database Seeding (Optional)
 
