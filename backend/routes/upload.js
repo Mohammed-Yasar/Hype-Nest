@@ -6,7 +6,25 @@ import { Readable } from 'stream';
 
 const router = express.Router();
 
-// Configure Cloudinary with env variables
+// Validate Cloudinary env variables first
+const requiredCloudinaryVars = [
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET',
+];
+const missingCloudinaryVars = requiredCloudinaryVars.filter(
+  (name) => !process.env[name] || !process.env[name].trim()
+);
+
+if (missingCloudinaryVars.length) {
+  console.error(
+    `Missing Cloudinary env vars: ${missingCloudinaryVars.join(', ')}`
+  );
+  throw new Error(
+    `Missing Cloudinary env vars: ${missingCloudinaryVars.join(', ')}`
+  );
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -75,7 +93,13 @@ router.post('/image', protect, upload.single('image'), async (req, res) => {
         url: result.secure_url,
       });
     } catch (error) {
-      console.error('Cloudinary error:', error);
+      console.error("===== CLOUDINARY ERROR =====");
+      console.dir(error, { depth: null });
+      console.error("Type:", typeof error);
+      console.error("Message:", error?.message);
+      console.error("Name:", error?.name);
+      console.error("Stack:", error?.stack);
+      console.error("===========================");
       res.status(500).json({
         message: `Cloudinary upload failed: ${error.message}`,
       });
