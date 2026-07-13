@@ -15,21 +15,21 @@ const requiredCloudinaryVars = [
 const missingCloudinaryVars = requiredCloudinaryVars.filter(
   (name) => !process.env[name] || !process.env[name].trim()
 );
+const missingCloudinaryVarsMessage = `Missing Cloudinary env vars: ${missingCloudinaryVars.join(
+  ', '
+)}.`;
 
-if (missingCloudinaryVars.length) {
-  console.error(
-    `Missing Cloudinary env vars: ${missingCloudinaryVars.join(', ')}`
-  );
-  throw new Error(
-    `Missing Cloudinary env vars: ${missingCloudinaryVars.join(', ')}`
-  );
+const cloudinaryConfigured = missingCloudinaryVars.length === 0;
+
+if (!cloudinaryConfigured) {
+  console.warn(missingCloudinaryVarsMessage + ' Cloudinary uploads will fail until configured.');
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
 }
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // Configure multer for memory storage
 const upload = multer({
